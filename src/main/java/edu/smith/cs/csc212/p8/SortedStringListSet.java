@@ -52,6 +52,7 @@ public class SortedStringListSet extends AbstractSet<String> {
 	 */
 	private int binarySearch(String query, int start, int end) {
 		// TODO: replace this with your own binary search.
+		//to compare strings use .compare not < and > !! 
 		return Collections.binarySearch(this.data.subList(start, end), query);
 	}
 
