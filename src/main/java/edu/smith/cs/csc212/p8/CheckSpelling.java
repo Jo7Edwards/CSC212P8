@@ -19,13 +19,10 @@ import java.util.TreeSet;
  * Cite: https://docs.oracle.com/javase/7/docs/api/java/lang/System.html#nanoTime() (for help with System.nanoTime())
  * https://stackoverflow.com/questions/4685450/why-is-the-result-of-1-3-0
  * https://alvinalexander.com/java/java-strip-characters-string-letters-numbers-replace
+ * https://piazza.com/class/jlmq9jjkmz53xv?cid=198
  */
 
-/*
- * need to find how to count up all the words of alice in w so I can count how many within the line
- * were matches and how many weren't then put that as a fraction over how many words 
- * 
- */
+
 
 public class CheckSpelling {
 	/**
@@ -46,34 +43,6 @@ public class CheckSpelling {
 		return words;
 	}
 	
-	/**
-	 * Make a practice List<String> of words 
-	 * @return a list of words both in and not in the dictionary
-	 * IRRELEVANT
-	 */
-	public static List<String> newWordList() {
-		List<String> words = new ArrayList<>();
-		/*words.add("and");
-		words.add("the");
-		words.add("plane");
-		words.add("flopdaga"); //fake word
-		words.add("perpilurpiflurp"); //fake word
-		words.add("nice");
-		words.add("flower");
-		words.add("fendunbunz"); //fake word*/
-		
-		List<String> dicWords = loadDictionary();
-		
-		for (int i=0; i <=1000; i++) {
-			if (i%5 == 0) { //make some amount fake words by adding xyz to the end of the word
-				words.add(dicWords.get(i) + "xyz");
-			} else {
-				words.add(dicWords.get(i)); //These should be real words
-			}
-		}
-		
-		return words;
-	}
 	
 	/**
 	 * This method looks for all the words in a dictionary.
@@ -97,15 +66,23 @@ public class CheckSpelling {
 		System.out.println(dictionary.getClass().getSimpleName()+": Lookup of items found="+ fractionFound+" (" + fractionFound*100+ "%), time="+nsPerItem+" ns/item");
 		
 	}
+	
+	/**
+	 * Checks what ratio of words in the book are misspelled. Anything not found in the given dictionary will count as a misspell. 
+	 * Prints out what the ratio of words misspelled is and the time it takes to figure it out whether it's misspelled or not in nanoseconds/item 
+	 * 
+	 * @param book - takes a File book 
+	 * @param dictionary - takes a Collection<String> that should comprise a dictionary, which you will use to check if the book's words are in the dictionary (spelled correctly) or not (misspelled)
+	 */
 	public static void checkBookSpelling(File book, Collection<String> dictionary) {
 		
+		//Need to read through book file to get a list of words in the book
 		List<String> bookWords = new ArrayList<>();
 		try {
 
 			BufferedReader reader = new BufferedReader(new FileReader(book));
 			
 			String line;
-			//List<String> bookWords = new ArrayList<>();
 			
 			while(true) {
 				line = reader.readLine();
@@ -125,13 +102,17 @@ public class CheckSpelling {
 			System.err.println("Couldn't read the txt");
 			System.exit(-1);
 		}
-		//__________________________________________________________________
+		
 		//now that we have a list of words in the book, check which ones are misspelled 
 		
 		int misspelled = 0;
 		int found = 0;
 		List<String> bookWords2 = new ArrayList<>();
 		
+		/*
+		 * This takes all the words in the book and takes out any characters that 
+		 * aren't letters, because if you don't do this then CharTrie will have problems
+		 */
 		for (String w : bookWords) {
 			String newString = w.replaceAll("[^a-zA-Z]", "");
 			bookWords2.add(newString);
@@ -139,25 +120,33 @@ public class CheckSpelling {
 		
 		long start = System.nanoTime();
 		for (String w : bookWords2) {
-			//String newString = w.replaceAll("[^a-zA-Z]", "");
 			if (dictionary.contains(w)) {
 				found++;
 			} else {
 				misspelled++;
-				//System.out.println(w);
+				//To check what misspelled words there are, just put a print w here
 			}
 		}
-		long end = System.nanoTime();
-		//System.out.println(misspelled + "missed words//size" + bookWords2.size());
+		long end = System.nanoTime(); 
+		
+		//since it's a fraction <1 need to cast float
 		float missRatio = (float) misspelled / (float) bookWords2.size();
-		//System.out.println("missRatio: " + missRatio);
+		
 		double timeSpentPerItem = (end - start) / ((double) bookWords2.size());
-		System.out.println(dictionary.getClass().getSimpleName()+ ": has this many ratio misspelled: " + missRatio + "& time is:" + timeSpentPerItem);
+		System.out.println(dictionary.getClass().getSimpleName()+ ": has this many ratio misspelled: " + missRatio + " & time is:" + timeSpentPerItem);
 	}
 	
+	/**
+	 * This creates a data set that can have some amount of words that will not 
+	 * be in the dictionary. 
+	 * @param listOfWords - List<String> of all words in the dictionary 
+	 * @param num - how many words should be in the data set
+	 * @param fraction - ratio that should be misspelled
+	 * @return a List<String> of the specified size and ratio of misspelled words
+	 */
 	public static List<String> createMixedDataset(List<String> listOfWords, int num, double fraction) {
 		List<String> words = new ArrayList<>();
-		
+		//amount of misspelled words there should be
 		double numOfMisses = num * fraction;
 		
 		for (int i=0; i <=num; i++) {
@@ -180,11 +169,10 @@ public class CheckSpelling {
 		// --- Load the dictionary.
 		List<String> listOfWords = loadDictionary();
 		
+		//---------------------------------------------------------------------------------------------------------------------------
 		// --- Create a bunch of data structures for testing:
-		/*
-		 * ((Measure insertion)) speed Figure out for each data structure how long 
-		 * it takes to insert each thing 
-		 */
+		
+		// ((Measure insertion)) Section!
 		System.out.println("\n");
 		
 		//Measure TreeSet insertion time
@@ -238,13 +226,15 @@ public class CheckSpelling {
 		timeLookup(listOfWords, hm100k);
 		System.out.println("\n");
 		
-		// --- Create a dataset of mixed hits and misses:
+		//---------------------------------------------------------------------------------------------------------------------------
+		
+		// --- Create a data set of mixed hits and misses:
 		/*
-		 * ((Plot Query Speed))  will need for loop, check ratios
+		 * ((Plot Query Speed)) section!
 		 */
 		System.out.println("\n");
 		List<String> hitsAndMisses = new ArrayList<>();
-		/*System.out.println("LOOKUP FOR hitsAndMisses WORDS: " );
+		System.out.println("LOOKUP FOR hitsAndMisses WORDS: " );
 		for (int i=0; i<11; i++) {
 			double fraction = i / 10.0;
 			hitsAndMisses = createMixedDataset(listOfWords, 1000, fraction);
@@ -254,14 +244,19 @@ public class CheckSpelling {
 			timeLookup(hitsAndMisses, trie);
 			timeLookup(hitsAndMisses, hm100k);
 			System.out.println("\n");
-		}*/
+		}
 		System.out.println("\n");
-		/*hitsAndMisses = newWordList();
-		// TODO, do this.*/
+		
 		
 		//---------------------------------------------------------------------------------------------------------------------------
+		
+		/*
+		 * ((Spell check a project Gutenberg book)) section!
+		 */
+		
 		String target = "src/main/resources/AliceInWonderland.txt";
 		
+		//initialize book file and do some preliminary checks on the file
 		File book = new File(target);
 		if (!book.canRead()) {
 			System.err.println("Book can not be read: "+book);
@@ -276,6 +271,7 @@ public class CheckSpelling {
 			System.exit(-3);
 		}
 		
+		//check what words in the book are misspelled when compared the the dictionary of a certain type/data structure
 		checkBookSpelling(book, treeOfWords);
 		checkBookSpelling(book, hashOfWords);
 		checkBookSpelling(book, bsl);

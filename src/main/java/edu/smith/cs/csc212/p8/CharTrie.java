@@ -4,6 +4,13 @@ import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+
+/*
+ * Cite: https://www.geeksforgeeks.org/counting-number-words-trie/
+ * the above just helped me get the single recursive line of code to make the count of 
+ * the countNodes() work
+ */
+
 /**
  * This is a Character Trie that stores Strings!
  * @author jfoley
@@ -24,7 +31,7 @@ public class CharTrie extends AbstractSet<String> {
 		for (char c : word.toCharArray()) {
 			chars.add(c);
 		}
-		root.insert(chars);
+		root.insert(chars); 
 		size++;
 	}
 	
@@ -113,10 +120,14 @@ public class CharTrie extends AbstractSet<String> {
 		 */
 		public int countNodes() {
 			int count = 1;
-			// loop over links
-			// if they're not null
-			// count them, too
+			
+			for (int i=0; i < links.length; i++) {
+				if (links[i] != null) {
+					count += links[i].countNodes();
+				}
+			}
 			return count;
+			
 		}
 	}
 	
